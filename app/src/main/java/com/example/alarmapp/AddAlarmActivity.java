@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -101,5 +102,23 @@ public class AddAlarmActivity extends AppCompatActivity {
                 startActivity(intent); // Открываем настройки для включения разрешения
             }
         }
+    }
+
+    private void stopAlarm() {
+        int alarmId = getIntent().getIntExtra("alarmId", -1); // Получаем ID будильника
+        if (alarmId != -1) {
+            // Обновляем состояние будильника в базе данных
+            AlarmDatabase db = new AlarmDatabase(this);
+            Alarm alarm = db.getAlarmById(alarmId); // Создайте метод getAlarmById
+            if (alarm != null) {
+                alarm.setActive(false); // Делаем будильник неактивным
+                db.updateAlarm(alarm); // Обновляем базу данных
+            }
+        }
+
+        // Сообщаем пользователю
+        Toast.makeText(this, "Будильник выключен", Toast.LENGTH_SHORT).show();
+
+        finish(); // Закрываем активность
     }
 }

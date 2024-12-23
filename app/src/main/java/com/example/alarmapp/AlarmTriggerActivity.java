@@ -42,32 +42,40 @@ public class AlarmTriggerActivity extends AppCompatActivity {
     private void snoozeAlarm() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        // Проверка разрешения
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
             Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-            startActivity(intent); // Запрашиваем разрешение
-            return; // Прерываем выполнение, пока пользователь не даст разрешение
+            startActivity(intent);
+            return;
         }
 
         if (repeatCount > 0) {
-            // Уникальный идентификатор для PendingIntent
             int requestCode = (int) System.currentTimeMillis();
 
             Intent intent = new Intent(this, AlarmReceiver.class);
-            intent.putExtra("repeatCount", repeatCount - 1); // Уменьшаем количество повторений
+            intent.putExtra("repeatCount", repeatCount - 1);
+            intent.putExtra("alarmId", getIntent().getIntExtra("alarmId", -1));
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                     this,
-                    requestCode, // Уникальный идентификатор
+                    requestCode,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
-            // Устанавливаем время срабатывания через 5 минут
             Calendar snoozeTime = Calendar.getInstance();
             snoozeTime.add(Calendar.MINUTE, 5);
 
+            int alarmId = getIntent().getIntExtra("alarmId", -1);
+            if (alarmId != -1) {
+                AlarmDatabase db = new AlarmDatabase(this);
+                Alarm alarm = db.getAlarmById(alarmId);
+                if (alarm != null) {
+                    alarm.setHour(snoozeTime.get(Calendar.HOUR_OF_DAY));
+                    alarm.setMinute(snoozeTime.get(Calendar.MINUTE));
+                    db.updateAlarm(alarm);
+                }
+            }
+
             try {
-                // Устанавливаем точный будильник
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, snoozeTime.getTimeInMillis(), pendingIntent);
                 Toast.makeText(this, "Будильник отложен на 5 минут", Toast.LENGTH_SHORT).show();
             } catch (SecurityException e) {
@@ -75,11 +83,20 @@ public class AlarmTriggerActivity extends AppCompatActivity {
             }
         }
 
-        finish(); // Закрываем активность
+        finish();
     }
 
     private void stopAlarm() {
-        // Просто закрываем активность
+        int alarmId = getIntent().getIntExtra("alarmId", -1);
+        if (alarmId != -1) {
+            AlarmDatabase db = new AlarmDatabase(this);
+            Alarm alarm = db.getAlarmById(alarmId);
+            if (alarm != null) {
+                alarm.setActive(false);
+                db.updateAlarm(alarm);
+            }
+        }
+
         Toast.makeText(this, "Будильник выключен", Toast.LENGTH_SHORT).show();
         finish();
     }

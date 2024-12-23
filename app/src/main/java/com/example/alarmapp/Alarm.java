@@ -46,6 +46,14 @@ public class Alarm {
         return repeatCount;
     }
 
+    public void setHour(int hour) {
+        this.hour = hour;
+    }
+
+    public void setMinute(int minute) {
+        this.minute = minute;
+    }
+
     public void setRepeatCount(int repeatCount) {
         this.repeatCount = repeatCount;
     }
