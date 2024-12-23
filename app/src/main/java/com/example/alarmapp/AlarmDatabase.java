@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AlarmDatabase extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarms.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String TABLE_ALARMS = "alarms";
 
     public AlarmDatabase(Context context) {
@@ -25,7 +25,7 @@ public class AlarmDatabase extends SQLiteOpenHelper {
                 "hour INTEGER, " +
                 "minute INTEGER, " +
                 "active INTEGER, " +
-                "repeatCount INTEGER DEFAULT 1)";
+                "repeatCount INTEGER)";
         db.execSQL(createTable);
     }
 
@@ -60,6 +60,7 @@ public class AlarmDatabase extends SQLiteOpenHelper {
         values.put("minute", alarm.getMinute());
         values.put("active", alarm.isActive() ? 1 : 0);
         values.put("repeatCount", alarm.getRepeatCount());
+
         db.update("alarms", values, "id = ?", new String[]{String.valueOf(alarm.getId())});
         db.close();
     }
@@ -90,5 +91,32 @@ public class AlarmDatabase extends SQLiteOpenHelper {
         }
         cursor.close();
         return alarmList;
+    }
+
+    public Alarm getAlarmById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM alarms WHERE id = ?", new String[]{String.valueOf(id)});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int hourIndex = cursor.getColumnIndex("hour");
+            int minuteIndex = cursor.getColumnIndex("minute");
+            int activeIndex = cursor.getColumnIndex("active");
+            int repeatCountIndex = cursor.getColumnIndex("repeatCount");
+
+            if (hourIndex == -1 || minuteIndex == -1 || activeIndex == -1 || repeatCountIndex == -1) {
+                throw new IllegalStateException("Ошибка в структуре таблицы базы данных.");
+            }
+
+            int hour = cursor.getInt(hourIndex);
+            int minute = cursor.getInt(minuteIndex);
+            boolean active = cursor.getInt(activeIndex) == 1;
+            int repeatCount = cursor.getInt(repeatCountIndex);
+
+            cursor.close();
+            return new Alarm(id, hour, minute, active, repeatCount);
+        }
+
+        if (cursor != null) cursor.close();
+        return null;
     }
 }
