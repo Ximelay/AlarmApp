@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AlarmApp</string>
+    <string name="add_alarm">Добавить будильник</string>
+    <string name="save">Сохранить</string>
+    <string name="snooze">Отложить</string>
+    <string name="stop">Выключить</string>
+    <string name="select_time">Выберите время</string>
+    <string name="alarm_triggered">Будильник сработал!</string>
+</resources>
